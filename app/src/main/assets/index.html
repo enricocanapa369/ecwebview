@@ -1,101 +1,101 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Sprite Frogger</title>
+  <meta charset="utf-8">
+  <title>Frogger Clone</title>
   <style>
-    html, body { margin: 0; padding: 0; overflow: hidden; background: #111; }
-    canvas { background: #222; display: block; margin: 0 auto; }
-    .buttons {
-      position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
-      display: flex; flex-wrap: wrap; width: 160px; justify-content: center;
+    body { background: #111; display: flex; flex-direction: column; align-items: center; margin: 0; }
+    canvas { background: #222; margin-top: 10px; }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, 60px);
+      gap: 10px;
+      margin-top: 20px;
     }
-    .btn {
-      width: 50px; height: 50px; margin: 5px;
-      background: #444; color: #fff; font-size: 24px;
-      text-align: center; line-height: 50px; border-radius: 8px;
-      user-select: none;
+    .controls button {
+      width: 60px; height: 60px; font-size: 24px;
     }
   </style>
 </head>
 <body>
-<canvas id="game" width="300" height="400"></canvas>
-<div class="buttons">
-  <div class="btn" ontouchstart="move('up')">⬆️</div>
-  <div class="btn" ontouchstart="move('left')">⬅️</div>
-  <div class="btn" ontouchstart="move('down')">⬇️</div>
-  <div class="btn" ontouchstart="move('right')">➡️</div>
-</div>
-<script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+  <canvas id="game" width="400" height="400"></canvas>
+  <div class="controls">
+    <div></div>
+    <button onclick="move(0,-1)">⬆️</button>
+    <div></div>
+    <button onclick="move(-1,0)">⬅️</button>
+    <button onclick="move(1,0)">➡️</button>
+    <div></div>
+    <button onclick="move(0,1)">⬇️</button>
+    <div></div>
+  </div>
 
-const frog = { x: 140, y: 360, size: 24 };
-let cars = [];
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const tile = 40;
 
-const frogImg = new Image();
-frogImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAcCAYAAABpoJQfAAAAvUlEQVRIS+2UsQ2DMAxFz2BU+VefWUYUYWMEJ3F5YkEOE0GhSWpMsnDKPOc1R17sT3Pc+MRa+5lq0bdM6Qp1CdIVUrc3JleJg0mn/2mpuox2Pv4/4EafWsc4DR7INR1mYDhU/9Jk9GZV70GdHt7ALq6bd4FYYw+9ib50O93H/ON4DbmUlx8MKrTuUOcCNmAURQ2vBsUVfUsRwSKta6fL8aZf4DCqng3H4cfXKAAAAAElFTkSuQmCC";
+    let frog = { x: 5, y: 9 };
+    const cars = [
+      { y: 7, dir: 1, speed: 0.05, x: 0 },
+      { y: 6, dir: -1, speed: 0.03, x: 10 },
+      { y: 5, dir: 1, speed: 0.04, x: 3 },
+    ];
 
-const carImg = new Image();
-carImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAATCAYAAAAXxWcSAAAArUlEQVRIS+2VQQ6CMAxFrxXZrnV2EzexvxzQK0gFLUUpWtrZAVThwXOXyQj6z5hMliU3KmAxj5VMC/f9IRvjfGEr11moJtfmyUvQZmAHf8CHP+ClgCr5UGM1AGQzYcAVhIkzZYCFSXZNV5DXs5HvKK+RgsuTBIUzG4qNUIqfM1goT3eMkLGnByTPDhA97xChsHKhzhcBO2sTvaUZqxI+aIPzjmlj1fZ7gdAAAAAElFTkSuQmCC";
+    // Base64 frog sprite (tiny green pixel guy)
+    const frogImg = new Image();
+    frogImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAMAAAC67D+PAAAAElBMVEUAAAB/f3+AgIB/f3+AgICBgYE+q6OjAAAAAXRSTlMAQObYZgAAAC1JREFUeJxjYGBgZGJgEGJmYGBgZGJgAAmBiZGJiYGBgYBgFJBgYQwAANmMIYcOJ12oAAAAASUVORK5CYII=';
 
-function spawnCars() {
-  cars = [];
-  for (let i = 0; i < 5; i++) {
-    cars.push({ x: Math.random() * 300, y: i * 60 + 20, w: 28, h: 20, dx: 2 + Math.random() * 2 });
-  }
-}
+    // Base64 car sprite (red rectangle)
+    const carImg = new Image();
+    carImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAKCAMAAABUQ4RDAAAAHlBMVEUAAAD8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/PyA/w6fAAAACnRSTlMA////AAD/9QD//wD/fZ/kAAAAJElEQVQY02NgIAIwUlAUYGRgZGBkZGRgIAFA5gYGBjY2NlYGBgAUAQAAG+4CCrNZIlmwAAAABJRU5ErkJggg==';
 
-function move(d) {
-  if (d === 'up') frog.y -= 20;
-  if (d === 'down') frog.y += 20;
-  if (d === 'left') frog.x -= 20;
-  if (d === 'right') frog.x += 20;
-}
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-function drawFrog() {
-  ctx.drawImage(frogImg, frog.x, frog.y, frog.size, frog.size);
-}
+      // Draw frog
+      ctx.drawImage(frogImg, frog.x * tile, frog.y * tile, tile, tile);
 
-function drawCars() {
-  for (let c of cars) {
-    ctx.drawImage(carImg, c.x, c.y, c.w, c.h);
-  }
-}
-
-function updateCars() {
-  for (let c of cars) {
-    c.x += c.dx;
-    if (c.x > 300) c.x = -c.w;
-  }
-}
-
-function checkCollision() {
-  for (let c of cars) {
-    if (frog.x < c.x + c.w &&
-        frog.x + frog.size > c.x &&
-        frog.y < c.y + c.h &&
-        frog.y + frog.size > c.y) {
-      frog.x = 140; frog.y = 360;
+      // Draw cars
+      cars.forEach(car => {
+        ctx.drawImage(carImg, car.x * tile, car.y * tile, tile, tile);
+      });
     }
-  }
-}
 
-function gameLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawFrog();
-  drawCars();
-  updateCars();
-  checkCollision();
-  requestAnimationFrame(gameLoop);
-}
+    function update(dt) {
+      cars.forEach(car => {
+        car.x += car.speed * car.dir * dt;
+        if (car.dir === 1 && car.x * tile > canvas.width) car.x = -1;
+        if (car.dir === -1 && car.x * tile < -tile) car.x = 10;
+      });
 
-frogImg.onload = () => {
-  carImg.onload = () => {
-    spawnCars();
-    gameLoop();
-  };
-};
-</script>
+      // Collision
+      cars.forEach(car => {
+        if (Math.floor(car.x) === frog.x && car.y === frog.y) {
+          frog = { x: 5, y: 9 };
+        }
+      });
+    }
+
+    function loop(timestamp) {
+      let now = performance.now();
+      let dt = now - (loop.lastTime || now);
+      loop.lastTime = now;
+
+      update(dt);
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    function move(dx, dy) {
+      frog.x = Math.max(0, Math.min(9, frog.x + dx));
+      frog.y = Math.max(0, Math.min(9, frog.y + dy));
+    }
+
+    window.onload = () => {
+      draw();
+      requestAnimationFrame(loop);
+    };
+  </script>
 </body>
 </html>
