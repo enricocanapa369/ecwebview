@@ -2,72 +2,100 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Mini Frogger</title>
+  <title>Sprite Frogger</title>
   <style>
-    canvas { background: #222; display: block; margin: 0 auto; margin-top: 30px; }
+    html, body { margin: 0; padding: 0; overflow: hidden; background: #111; }
+    canvas { background: #222; display: block; margin: 0 auto; }
+    .buttons {
+      position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-wrap: wrap; width: 160px; justify-content: center;
+    }
+    .btn {
+      width: 50px; height: 50px; margin: 5px;
+      background: #444; color: #fff; font-size: 24px;
+      text-align: center; line-height: 50px; border-radius: 8px;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
-<canvas width="400" height="400" id="game"></canvas>
+<canvas id="game" width="300" height="400"></canvas>
+<div class="buttons">
+  <div class="btn" ontouchstart="move('up')">⬆️</div>
+  <div class="btn" ontouchstart="move('left')">⬅️</div>
+  <div class="btn" ontouchstart="move('down')">⬇️</div>
+  <div class="btn" ontouchstart="move('right')">➡️</div>
+</div>
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-const frog = { x: 180, y: 360, w: 20, h: 20 };
-const cars = [];
-const lanes = [60, 100, 140, 180];
+const frog = { x: 140, y: 360, size: 24 };
+let cars = [];
 
-function drawFrog() {
-  ctx.fillStyle = "lime";
-  ctx.fillRect(frog.x, frog.y, frog.w, frog.h);
-}
+const frogImg = new Image();
+frogImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAcCAYAAABpoJQfAAAAvUlEQVRIS+2UsQ2DMAxFz2BU+VefWUYUYWMEJ3F5YkEOE0GhSWpMsnDKPOc1R17sT3Pc+MRa+5lq0bdM6Qp1CdIVUrc3JleJg0mn/2mpuox2Pv4/4EafWsc4DR7INR1mYDhU/9Jk9GZV70GdHt7ALq6bd4FYYw+9ib50O93H/ON4DbmUlx8MKrTuUOcCNmAURQ2vBsUVfUsRwSKta6fL8aZf4DCqng3H4cfXKAAAAAElFTkSuQmCC";
 
-function drawCars() {
-  ctx.fillStyle = "red";
-  for (let car of cars) {
-    ctx.fillRect(car.x, car.y, car.w, car.h);
+const carImg = new Image();
+carImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAATCAYAAAAXxWcSAAAArUlEQVRIS+2VQQ6CMAxFrxXZrnV2EzexvxzQK0gFLUUpWtrZAVThwXOXyQj6z5hMliU3KmAxj5VMC/f9IRvjfGEr11moJtfmyUvQZmAHf8CHP+ClgCr5UGM1AGQzYcAVhIkzZYCFSXZNV5DXs5HvKK+RgsuTBIUzG4qNUIqfM1goT3eMkLGnByTPDhA97xChsHKhzhcBO2sTvaUZqxI+aIPzjmlj1fZ7gdAAAAAElFTkSuQmCC";
+
+function spawnCars() {
+  cars = [];
+  for (let i = 0; i < 5; i++) {
+    cars.push({ x: Math.random() * 300, y: i * 60 + 20, w: 28, h: 20, dx: 2 + Math.random() * 2 });
   }
 }
 
-function moveCars() {
-  for (let car of cars) {
-    car.x += car.speed;
-    if (car.x > 400) car.x = -car.w;
+function move(d) {
+  if (d === 'up') frog.y -= 20;
+  if (d === 'down') frog.y += 20;
+  if (d === 'left') frog.x -= 20;
+  if (d === 'right') frog.x += 20;
+}
+
+function drawFrog() {
+  ctx.drawImage(frogImg, frog.x, frog.y, frog.size, frog.size);
+}
+
+function drawCars() {
+  for (let c of cars) {
+    ctx.drawImage(carImg, c.x, c.y, c.w, c.h);
+  }
+}
+
+function updateCars() {
+  for (let c of cars) {
+    c.x += c.dx;
+    if (c.x > 300) c.x = -c.w;
   }
 }
 
 function checkCollision() {
-  for (let car of cars) {
-    if (frog.x < car.x + car.w && frog.x + frog.w > car.x &&
-        frog.y < car.y + car.h && frog.y + frog.h > car.y) {
-      frog.y = 360; // Reset on hit
+  for (let c of cars) {
+    if (frog.x < c.x + c.w &&
+        frog.x + frog.size > c.x &&
+        frog.y < c.y + c.h &&
+        frog.y + frog.size > c.y) {
+      frog.x = 140; frog.y = 360;
     }
   }
 }
 
 function gameLoop() {
-  ctx.clearRect(0, 0, 400, 400);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawFrog();
   drawCars();
-  moveCars();
+  updateCars();
   checkCollision();
   requestAnimationFrame(gameLoop);
 }
 
-document.addEventListener("keydown", e => {
-  if (e.key === "ArrowUp") frog.y -= 20;
-  if (e.key === "ArrowDown") frog.y += 20;
-  if (e.key === "ArrowLeft") frog.x -= 20;
-  if (e.key === "ArrowRight") frog.x += 20;
-});
-
-for (let y of lanes) {
-  for (let i = 0; i < 2; i++) {
-    cars.push({ x: i * 200, y: y, w: 40, h: 20, speed: 1.5 + Math.random() });
-  }
-}
-
-gameLoop();
+frogImg.onload = () => {
+  carImg.onload = () => {
+    spawnCars();
+    gameLoop();
+  };
+};
 </script>
 </body>
 </html>
