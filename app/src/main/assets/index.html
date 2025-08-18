@@ -1,101 +1,160 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Frogger Clone</title>
   <style>
-    body { background: #111; display: flex; flex-direction: column; align-items: center; margin: 0; }
-    canvas { background: #222; margin-top: 10px; }
-    .controls {
-      display: grid;
-      grid-template-columns: repeat(3, 60px);
-      gap: 10px;
-      margin-top: 20px;
+    body {
+      margin: 0;
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      overflow: hidden;
     }
-    .controls button {
-      width: 60px; height: 60px; font-size: 24px;
+    canvas {
+      background: #222;
+      display: block;
+      margin: auto;
+      margin-top: 10px;
+    }
+    #controls {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .btn {
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
+      border: none;
+      border-radius: 10px;
+      background: #fff;
+      color: #333;
+    }
+    #errorBox {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      width: 100%;
+      max-height: 40%;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.85);
+      color: red;
+      font-size: 12px;
+      display: none;
+      padding: 10px;
+      box-sizing: border-box;
+      white-space: pre-wrap;
+      z-index: 10;
+    }
+    #toggleErrors {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      z-index: 11;
+      font-size: 12px;
+      padding: 5px 10px;
+      background: white;
+      color: black;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
-  <canvas id="game" width="400" height="400"></canvas>
-  <div class="controls">
-    <div></div>
-    <button onclick="move(0,-1)">⬆️</button>
-    <div></div>
-    <button onclick="move(-1,0)">⬅️</button>
-    <button onclick="move(1,0)">➡️</button>
-    <div></div>
-    <button onclick="move(0,1)">⬇️</button>
-    <div></div>
+  <canvas id="game" width="300" height="400"></canvas>
+
+  <div id="controls">
+    <button class="btn" onclick="move('up')">⬆️</button>
+    <button class="btn" onclick="move('left')">⬅️</button>
+    <button class="btn" onclick="move('right')">➡️</button>
+    <button class="btn" onclick="move('down')">⬇️</button>
   </div>
+
+  <button id="toggleErrors" onclick="toggleErrorBox()">Show Errors</button>
+  <div id="errorBox"></div>
 
   <script>
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
-    const tile = 40;
 
-    let frog = { x: 5, y: 9 };
-    const cars = [
-      { y: 7, dir: 1, speed: 0.05, x: 0 },
-      { y: 6, dir: -1, speed: 0.03, x: 10 },
-      { y: 5, dir: 1, speed: 0.04, x: 3 },
-    ];
+    let player = { x: 140, y: 360, size: 20 };
+    let cars = Array.from({ length: 5 }, (_, i) => ({
+      x: Math.random() * 300,
+      y: i * 60 + 40,
+      w: 40,
+      h: 20,
+      speed: 2 + Math.random() * 2
+    }));
 
-    // Base64 frog sprite (tiny green pixel guy)
-    const frogImg = new Image();
-    frogImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAMAAAC67D+PAAAAElBMVEUAAAB/f3+AgIB/f3+AgICBgYE+q6OjAAAAAXRSTlMAQObYZgAAAC1JREFUeJxjYGBgZGJgEGJmYGBgZGJgAAmBiZGJiYGBgYBgFJBgYQwAANmMIYcOJ12oAAAAASUVORK5CYII=';
-
-    // Base64 car sprite (red rectangle)
-    const carImg = new Image();
-    carImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAKCAMAAABUQ4RDAAAAHlBMVEUAAAD8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/PyA/w6fAAAACnRSTlMA////AAD/9QD//wD/fZ/kAAAAJElEQVQY02NgIAIwUlAUYGRgZGBkZGRgIAFA5gYGBjY2NlYGBgAUAQAAG+4CCrNZIlmwAAAABJRU5ErkJggg==';
+    function move(dir) {
+      const s = 20;
+      if (dir === 'up') player.y -= s;
+      if (dir === 'down') player.y += s;
+      if (dir === 'left') player.x -= s;
+      if (dir === 'right') player.x += s;
+    }
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw frog
-      ctx.drawImage(frogImg, frog.x * tile, frog.y * tile, tile, tile);
+      ctx.fillStyle = 'lime';
+      ctx.fillRect(player.x, player.y, player.size, player.size);
 
-      // Draw cars
-      cars.forEach(car => {
-        ctx.drawImage(carImg, car.x * tile, car.y * tile, tile, tile);
-      });
-    }
+      ctx.fillStyle = 'red';
+      for (let car of cars) {
+        car.x += car.speed;
+        if (car.x > canvas.width) car.x = -car.w;
+        ctx.fillRect(car.x, car.y, car.w, car.h);
 
-    function update(dt) {
-      cars.forEach(car => {
-        car.x += car.speed * car.dir * dt;
-        if (car.dir === 1 && car.x * tile > canvas.width) car.x = -1;
-        if (car.dir === -1 && car.x * tile < -tile) car.x = 10;
-      });
-
-      // Collision
-      cars.forEach(car => {
-        if (Math.floor(car.x) === frog.x && car.y === frog.y) {
-          frog = { x: 5, y: 9 };
+        if (
+          player.x < car.x + car.w &&
+          player.x + player.size > car.x &&
+          player.y < car.y + car.h &&
+          player.y + player.size > car.y
+        ) {
+          player.y = 360; // Reset position
         }
-      });
+      }
+
+      requestAnimationFrame(draw);
     }
 
-    function loop(timestamp) {
-      let now = performance.now();
-      let dt = now - (loop.lastTime || now);
-      loop.lastTime = now;
+    draw();
 
-      update(dt);
-      draw();
-      requestAnimationFrame(loop);
+    // Error capture
+    let errorLogs = [];
+    const errorBox = document.getElementById('errorBox');
+
+    function logError(msg) {
+      errorLogs.push(msg);
+      if (errorBox.style.display !== 'none') {
+        errorBox.textContent = errorLogs.join('\n');
+      }
     }
 
-    function move(dx, dy) {
-      frog.x = Math.max(0, Math.min(9, frog.x + dx));
-      frog.y = Math.max(0, Math.min(9, frog.y + dy));
-    }
-
-    window.onload = () => {
-      draw();
-      requestAnimationFrame(loop);
+    window.onerror = function (msg, url, lineNo, columnNo, error) {
+      logError(`[${lineNo}:${columnNo}] ${msg}`);
     };
+
+    const originalConsoleError = console.error;
+    console.error = function (...args) {
+      logError(args.join(' '));
+      originalConsoleError.apply(console, args);
+    };
+
+    function toggleErrorBox() {
+      if (errorBox.style.display === 'none') {
+        errorBox.style.display = 'block';
+        errorBox.textContent = errorLogs.join('\n') || 'No errors';
+        document.getElementById('toggleErrors').textContent = 'Hide Errors';
+      } else {
+        errorBox.style.display = 'none';
+        document.getElementById('toggleErrors').textContent = 'Show Errors';
+      }
+    }
   </script>
 </body>
 </html>
