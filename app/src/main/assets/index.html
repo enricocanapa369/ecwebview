@@ -1,11 +1,73 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta charset="UTF-8">
+  <title>Mini Frogger</title>
+  <style>
+    canvas { background: #222; display: block; margin: 0 auto; margin-top: 30px; }
+  </style>
 </head>
-<body style="font-family: monospace">
-    Enrico Canapa was here!! again!!
+<body>
+<canvas width="400" height="400" id="game"></canvas>
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const frog = { x: 180, y: 360, w: 20, h: 20 };
+const cars = [];
+const lanes = [60, 100, 140, 180];
+
+function drawFrog() {
+  ctx.fillStyle = "lime";
+  ctx.fillRect(frog.x, frog.y, frog.w, frog.h);
+}
+
+function drawCars() {
+  ctx.fillStyle = "red";
+  for (let car of cars) {
+    ctx.fillRect(car.x, car.y, car.w, car.h);
+  }
+}
+
+function moveCars() {
+  for (let car of cars) {
+    car.x += car.speed;
+    if (car.x > 400) car.x = -car.w;
+  }
+}
+
+function checkCollision() {
+  for (let car of cars) {
+    if (frog.x < car.x + car.w && frog.x + frog.w > car.x &&
+        frog.y < car.y + car.h && frog.y + frog.h > car.y) {
+      frog.y = 360; // Reset on hit
+    }
+  }
+}
+
+function gameLoop() {
+  ctx.clearRect(0, 0, 400, 400);
+  drawFrog();
+  drawCars();
+  moveCars();
+  checkCollision();
+  requestAnimationFrame(gameLoop);
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowUp") frog.y -= 20;
+  if (e.key === "ArrowDown") frog.y += 20;
+  if (e.key === "ArrowLeft") frog.x -= 20;
+  if (e.key === "ArrowRight") frog.x += 20;
+});
+
+for (let y of lanes) {
+  for (let i = 0; i < 2; i++) {
+    cars.push({ x: i * 200, y: y, w: 40, h: 20, speed: 1.5 + Math.random() });
+  }
+}
+
+gameLoop();
+</script>
 </body>
 </html>
