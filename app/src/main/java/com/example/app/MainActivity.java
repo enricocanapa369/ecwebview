@@ -26,7 +26,7 @@ public class MainActivity extends Activity {
 
         WebSettings webSettings = mWebView.getSettings();
         webSettings.setJavaScriptEnabled(true);
-        webSettings.setGeolocationEnabled(true);  // Enable geolocation
+        webSettings.setGeolocationEnabled(true);
         mWebView.setWebViewClient(new MyWebViewClient());
 
         // Grant geolocation permission automatically
@@ -44,13 +44,12 @@ public class MainActivity extends Activity {
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
         }
 
-        // Load your local file
         mWebView.loadUrl("file:///android_asset/index.html");
     }
 
     @Override
     public void onBackPressed() {
-        if(mWebView.canGoBack()) {
+        if (mWebView.canGoBack()) {
             mWebView.goBack();
         } else {
             super.onBackPressed();
