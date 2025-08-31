@@ -26,7 +26,7 @@ public class MainActivity extends Activity {
 
         WebSettings webSettings = mWebView.getSettings();
         webSettings.setJavaScriptEnabled(true);
-        webSettings.setGeolocationEnabled(true);  // ✅ Enable geolocation
+        webSettings.setGeolocationEnabled(true);  // Enable geolocation
         mWebView.setWebViewClient(new MyWebViewClient());
 
         // Grant geolocation permission automatically
